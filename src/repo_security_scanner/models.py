@@ -25,9 +25,12 @@ class Severity(Enum):
 
     @classmethod
     def from_string(cls, value: str) -> Severity:
+        _aliases = {"MODERATE": "MEDIUM"}
         try:
-            return cls[value.upper()]
-        except KeyError:
+            upper = value.upper()
+            upper = _aliases.get(upper, upper)
+            return cls[upper]
+        except (KeyError, AttributeError):
             return cls.UNKNOWN
 
 
