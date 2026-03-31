@@ -4,7 +4,7 @@ from repo_security_scanner.models import Ecosystem
 from repo_security_scanner.parsers.python import (
     RequirementsTxtParser, PyprojectTomlParser, PipfileLockParser, PoetryLockParser,
 )
-from repo_security_scanner.parsers.node import PackageJsonParser, PackageLockJsonParser, YarnLockParser
+from repo_security_scanner.parsers.node import PackageJsonParser, PackageLockJsonParser, YarnLockParser, PnpmLockParser
 from repo_security_scanner.parsers.java import PomXmlParser, BuildGradleParser
 from repo_security_scanner.parsers.go import GoModParser
 from repo_security_scanner.parsers.ruby import GemfileParser, GemfileLockParser
@@ -230,3 +230,40 @@ class TestComposerLock:
         content = '{"packages": [{"name": "laravel/framework", "version": "v10.0.0"}], "packages-dev": [{"name": "phpunit/phpunit", "version": "10.1.0"}]}'
         deps = ComposerLockParser().parse(content, "composer.lock")
         assert len(deps) == 2
+
+
+class TestPnpmLock:
+    def test_v6_format(self):
+        content = '''lockfileVersion: '6.0'
+
+packages:
+
+  /express@4.18.2:
+    resolution: {integrity: sha512-xxx}
+    dependencies:
+      accepts: 1.3.8
+
+  /@babel/core@7.23.0:
+    resolution: {integrity: sha512-yyy}
+'''
+        deps = PnpmLockParser().parse(content, "pnpm-lock.yaml")
+        assert len(deps) == 2
+        names = {d.name for d in deps}
+        assert "express" in names
+        assert "@babel/core" in names
+        assert deps[0].ecosystem == Ecosystem.NPM
+
+    def test_v9_format(self):
+        content = """lockfileVersion: '9.0'
+
+packages:
+  'express@4.21.0':
+    resolution: {integrity: sha512-xxx}
+  '@types/node@20.10.0':
+    resolution: {integrity: sha512-yyy}
+"""
+        deps = PnpmLockParser().parse(content, "pnpm-lock.yaml")
+        assert len(deps) == 2
+        names = {d.name for d in deps}
+        assert "express" in names
+        assert "@types/node" in names
