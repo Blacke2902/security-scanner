@@ -86,7 +86,7 @@ HELP_TEXT = textwrap.dedent("""\
                                  PyPI/npm registry health checks.
 
       --clear-cache              Clear cached early warning data stored at
-                                 ~/.cache/repo-security-scanner/
+                                 ~/.cache/security-scanner/
 
       --no-color                 Disable colored terminal output.
 

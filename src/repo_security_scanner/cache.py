@@ -10,7 +10,7 @@ from pathlib import Path
 class FileCache:
     def __init__(self, cache_dir: str = None):
         if cache_dir is None:
-            cache_dir = os.path.join(Path.home(), ".cache", "repo-security-scanner")
+            cache_dir = os.path.join(Path.home(), ".cache", "security-scanner")
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 

@@ -1,6 +1,6 @@
 <div align="center">
 
-# repo-security-scanner
+# security-scanner
 
 ### Stop shipping vulnerabilities. Start scanning locally.
 
@@ -61,7 +61,7 @@ Open-source dependencies are under constant attack — and most teams find out *
 
 ## The Solution
 
-`repo-security-scanner` takes a different approach:
+`security-scanner` takes a different approach:
 
 ```
 No accounts. No API keys. No config files. No paywalls.
@@ -225,7 +225,7 @@ Dependencies ──> OSV Batch Query ──> All vulnerabilities found
 
 > **The problem with CVE databases**: Official sources (OSV, NVD, GitHub Advisory) lag behind real-world disclosures by **hours to weeks**. The [axios npm compromise](https://www.stepsecurity.io/blog/axios-compromised-on-npm-malicious-versions-drop-remote-access-trojan), the [litellm supply chain attack](https://github.com/BerriAI/litellm/issues/24512), the xz-utils backdoor — these all surfaced on blogs, Twitter, and GitHub Issues long before any CVE was assigned.
 
-`repo-security-scanner` solves this with the `--early-warning` flag:
+`security-scanner` solves this with the `--early-warning` flag:
 
 ```bash
 repo-scan . --early-warning
@@ -313,7 +313,7 @@ Early warning sources are inherently noisy. The scanner uses multiple strategies
 
 ### Caching
 
-Early warning results are cached locally at `~/.cache/repo-security-scanner/` to avoid repeated network calls:
+Early warning results are cached locally at `~/.cache/security-scanner/` to avoid repeated network calls:
 
 | Source | Cache Duration |
 |--------|---------------|
@@ -470,7 +470,7 @@ security-scan:
 
 ## Comparison with Existing Tools
 
-| Feature | repo-security-scanner | npm audit | pip-audit | Snyk | Dependabot |
+| Feature | security-scanner | npm audit | pip-audit | Snyk | Dependabot |
 |---------|:--------------------:|:---------:|:---------:|:----:|:----------:|
 | Multi-ecosystem | **7** | 1 | 1 | Many | Many |
 | Free & open source | Yes | Yes | Yes | Freemium | Free (GitHub only) |

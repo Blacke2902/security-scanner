@@ -1,4 +1,4 @@
-# Contributing to repo-security-scanner
+# Contributing to security-scanner
 
 Thanks for your interest in contributing! This guide will help you get started.
 
