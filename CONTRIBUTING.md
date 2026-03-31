@@ -7,7 +7,7 @@ Thanks for your interest in contributing! This guide will help you get started.
 ```bash
 # Clone the repo
 git clone https://github.com/yashbarot/security-scanner.git
-cd repo-security-scanner
+cd security-scanner
 
 # Install in development mode
 pip install -e ".[dev]"
