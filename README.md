@@ -99,6 +99,31 @@ pip install .
 
 > **Tip**: For CI/production, you can pin to a specific version tag: `pip install git+...@v0.2.0`. Check [Releases](https://github.com/yashbarot/security-scanner/releases) for available versions.
 
+### Update to Latest
+
+If you already have the repo cloned:
+
+```bash
+cd security-scanner
+git pull origin main
+pip install .
+```
+
+To switch to a specific version:
+
+```bash
+git checkout v0.2.0
+pip install .
+```
+
+Verify your installed version:
+
+```bash
+repo-scan --help
+# or
+python -c "import repo_security_scanner; print(repo_security_scanner.__version__)"
+```
+
 ### Scan
 
 ```bash
