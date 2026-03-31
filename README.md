@@ -552,15 +552,27 @@ That's it. The registry auto-discovers it.
 
 ## Roadmap
 
+### Completed
 - [x] Early warning system (CISA KEV, Hacker News, GitHub Issues, RSS feeds, registry health)
 - [x] File-based caching for early warning sources
 - [x] Noise reduction with relevance scoring and blocklists
-- [ ] SBOM export (CycloneDX / SPDX format)
+
+### Up Next
+- [ ] SBOM export (CycloneDX 1.5 / SPDX 2.3)
+- [ ] SARIF output for GitHub Code Scanning integration
+- [ ] Config file (`security-scanner.toml`) with vulnerability suppression and expiry dates
 - [ ] NVD enrichment for CVSS scores
+
+### Planned
+- [ ] Offline mode with downloadable OSV database
+- [ ] Guided remediation (interactive fix suggestions)
+- [ ] License scanning with allowlist-based compliance checks
 - [ ] Monorepo support (scan subdirectories independently)
-- [ ] `--watch` mode for continuous scanning during development
 - [ ] Pre-commit hook integration
-- [ ] Support for `.NET` (NuGet), `Swift` (SPM), `Dart` (pub) ecosystems
+- [ ] `--watch` mode for continuous scanning during development
+- [ ] Support for `.NET` (NuGet), `Dart` (pub), `Elixir` (mix), `Haskell` (cabal) ecosystems
+- [ ] Container image scanning (Dockerfile dependency detection)
+- [ ] Call graph analysis to detect if vulnerable code is actually reachable
 - [ ] GitHub Action published to marketplace
 
 ---
