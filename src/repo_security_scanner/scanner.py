@@ -72,7 +72,7 @@ class SecurityScanner:
         seen: dict[str, Dependency] = {}
         lock_files = {
             "Pipfile.lock", "poetry.lock", "package-lock.json",
-            "yarn.lock", "Gemfile.lock", "Cargo.lock", "composer.lock",
+            "yarn.lock", "pnpm-lock.yaml", "Gemfile.lock", "Cargo.lock", "composer.lock",
         }
 
         # Process non-lock files first, then lock files (so lock files overwrite)

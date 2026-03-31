@@ -88,3 +88,32 @@ class YarnLockParser(DependencyParser):
                         deps.append(Dependency(name=current_name, version=version, ecosystem=self.ecosystem, source_file=filename))
                     current_name = None
         return deps
+
+
+@register_parser
+class PnpmLockParser(DependencyParser):
+    filenames = ["pnpm-lock.yaml"]
+    ecosystem = Ecosystem.NPM
+
+    def parse(self, content: str, filename: str) -> list[Dependency]:
+        deps = []
+        seen = set()
+        for line in content.splitlines():
+            line = line.strip().strip("'\"")
+            # Match pnpm package key patterns:
+            # v6: /@scope/name@version or /name@version
+            # v9: @scope/name@version or name@version (under packages:)
+            m = re.match(
+                r'^/?(@[^@/]+/[^@(]+|[^@/][^@(]*)@(\d+\.[^:()\s]+)',
+                line,
+            )
+            if m:
+                name = m.group(1).strip()
+                version = m.group(2).strip().rstrip(":")
+                if name and version and name not in seen:
+                    seen.add(name)
+                    deps.append(Dependency(
+                        name=name, version=version,
+                        ecosystem=self.ecosystem, source_file=filename,
+                    ))
+        return deps
