@@ -33,12 +33,12 @@ Open-source dependencies are under constant attack — and most teams find out *
 
 | Year | Package | Ecosystem | What Happened | Impact |
 |------|---------|-----------|---------------|--------|
-| 2024 | **axios** | npm | SSRF & cookie exposure via XSRF-TOKEN header leak ([CVE-2023-45857](https://nvd.nist.gov/vuln/detail/CVE-2023-45857)) | 50M+ weekly downloads affected |
-| 2024 | **lightllm** | PyPI | Remote code execution in model serving framework | AI/ML pipelines compromised |
+| 2026 | **axios** | npm | SSRF + credential leak via crafted requests ([#10604](https://github.com/axios/axios/issues/10604)) | 60M+ weekly downloads affected |
+| 2026 | **litellm** | PyPI | Supply chain compromise — malicious code injected ([#24512](https://github.com/BerriAI/litellm/issues/24512)) | AI/ML pipelines across enterprises |
+| 2025 | **react** | npm | Pre-auth RCE in React Server Components via unsafe deserialization ([CVE-2025-55182](https://nvd.nist.gov/vuln/detail/CVE-2025-55182)) | CVSS 10.0, CISA KEV, actively exploited |
 | 2024 | **xz-utils** | Linux | Backdoor injected via social engineering of maintainer ([CVE-2024-3094](https://nvd.nist.gov/vuln/detail/CVE-2024-3094)) | Nearly every Linux distro at risk |
 | 2023 | **jsonwebtoken** | npm | JWT signature bypass vulnerability ([CVE-2022-23529](https://nvd.nist.gov/vuln/detail/CVE-2022-23529)) | 36M+ weekly downloads |
-| 2021 | **log4j** | Maven | Remote code execution — Log4Shell ([CVE-2021-44228](https://nvd.nist.gov/vuln/detail/CVE-2021-44228)) | Affected ~93% of enterprise cloud environments |
-| 2021 | **ua-parser-js** | npm | Supply chain attack: crypto miners injected | 8M+ weekly downloads |
+| 2021 | **log4j** | Maven | Remote code execution — Log4Shell ([CVE-2021-44228](https://nvd.nist.gov/vuln/detail/CVE-2021-44228)) | ~93% of enterprise cloud environments |
 
 ### Current bottlenecks teams face
 
@@ -51,7 +51,7 @@ Open-source dependencies are under constant attack — and most teams find out *
 
 **The reality:**
 
-- **New CVEs are published daily** — over 29,000 in 2023 alone ([source](https://nvd.nist.gov/))
+- **New CVEs are published daily** — over 35,000 in 2025 alone ([source](https://nvd.nist.gov/))
 - **70% of codebases** contain open-source vulnerabilities ([Synopsys OSSRA 2024](https://www.synopsys.com/software-integrity/resources/analyst-reports/open-source-security-risk-analysis.html))
 - **Most teams rely on `npm audit` or `pip-audit`** — but these are **single-ecosystem** and miss cross-project risks
 - **Enterprise scanners (Snyk, Sonatype, etc.)** are powerful but expensive and complex to set up
@@ -169,7 +169,7 @@ Running `repo-scan . --format html -o report.html` generates a clean, shareable 
 | Ecosystem | Dependency Files | Lock Files |
 |:---------:|:-----------------|:-----------|
 | **Python** | `requirements.txt` `pyproject.toml` | `Pipfile.lock` `poetry.lock` |
-| **Node.js** | `package.json` | `package-lock.json` `yarn.lock` |
+| **Node.js** | `package.json` | `package-lock.json` `yarn.lock` `pnpm-lock.yaml` |
 | **Java** | `pom.xml` `build.gradle` `build.gradle.kts` | — |
 | **Go** | `go.mod` | — |
 | **Ruby** | `Gemfile` | `Gemfile.lock` |
@@ -511,7 +511,7 @@ src/repo_security_scanner/
 ├── cli.py                    # CLI interface with rich terminal output
 ├── parsers/                  # Dependency file parsers (one per ecosystem)
 │   ├── python.py             #   requirements.txt, pyproject.toml, Pipfile.lock, poetry.lock
-│   ├── node.py               #   package.json, package-lock.json, yarn.lock
+│   ├── node.py               #   package.json, package-lock.json, yarn.lock, pnpm-lock.yaml
 │   ├── java.py               #   pom.xml, build.gradle
 │   ├── go.py                 #   go.mod
 │   ├── ruby.py               #   Gemfile, Gemfile.lock
