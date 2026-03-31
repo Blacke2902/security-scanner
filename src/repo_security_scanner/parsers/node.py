@@ -117,3 +117,69 @@ class PnpmLockParser(DependencyParser):
                         ecosystem=self.ecosystem, source_file=filename,
                     ))
         return deps
+
+
+@register_parser
+class BunLockParser(DependencyParser):
+    filenames = ["bun.lock", "bun.lockb"]
+    ecosystem = Ecosystem.NPM
+
+    def parse(self, content: str, filename: str) -> list[Dependency]:
+        deps = []
+        seen = set()
+
+        # bun.lock (v1.2+) is JSON with "packages" as a flat object
+        # where keys are package identifiers and values are arrays.
+        # Format: {"packages": {"name": ["name@version", ...], ...}}
+        # Also handles the text-based bun.lockb fallback via regex.
+        try:
+            data = json.loads(content)
+            packages = data.get("packages", {})
+            for key, val in packages.items():
+                if not key or key == "":
+                    continue
+                # val is typically [resolution_string, ...] where
+                # resolution_string is "name@version"
+                if isinstance(val, list) and val:
+                    resolution = val[0] if isinstance(val[0], str) else ""
+                else:
+                    resolution = ""
+
+                # Extract name and version from resolution or key
+                name, version = self._parse_bun_entry(key, resolution)
+                if name and version and name not in seen:
+                    seen.add(name)
+                    deps.append(Dependency(
+                        name=name, version=version,
+                        ecosystem=self.ecosystem, source_file=filename,
+                    ))
+            return deps
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+        # Fallback: regex for text-based format lines like "package@version"
+        for line in content.splitlines():
+            line = line.strip().strip('"')
+            m = re.match(r'^(@?[^@\s]+)@(\d+\.\S+)', line)
+            if m:
+                name, version = m.group(1), m.group(2)
+                if name not in seen:
+                    seen.add(name)
+                    deps.append(Dependency(
+                        name=name, version=version,
+                        ecosystem=self.ecosystem, source_file=filename,
+                    ))
+        return deps
+
+    def _parse_bun_entry(self, key: str, resolution: str) -> tuple:
+        """Extract name and version from a bun.lock entry."""
+        # Try resolution string first: "express@4.18.2"
+        if resolution:
+            m = re.match(r'^(@?[^@]+)@(\d+\.\S+)', resolution)
+            if m:
+                return m.group(1), m.group(2)
+
+        # Try key: might be "express" or "@scope/pkg"
+        # Version might be in the resolution array
+        # Key alone doesn't contain version, skip
+        return None, None

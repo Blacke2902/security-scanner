@@ -169,7 +169,7 @@ Running `repo-scan . --format html -o report.html` generates a clean, shareable 
 | Ecosystem | Dependency Files | Lock Files |
 |:---------:|:-----------------|:-----------|
 | **Python** | `requirements.txt` `pyproject.toml` | `Pipfile.lock` `poetry.lock` |
-| **Node.js** | `package.json` | `package-lock.json` `yarn.lock` `pnpm-lock.yaml` |
+| **Node.js** | `package.json` | `package-lock.json` `yarn.lock` `pnpm-lock.yaml` `bun.lock` |
 | **Java** | `pom.xml` `build.gradle` `build.gradle.kts` | — |
 | **Go** | `go.mod` | — |
 | **Ruby** | `Gemfile` | `Gemfile.lock` |
@@ -511,7 +511,7 @@ src/repo_security_scanner/
 ├── cli.py                    # CLI interface with rich terminal output
 ├── parsers/                  # Dependency file parsers (one per ecosystem)
 │   ├── python.py             #   requirements.txt, pyproject.toml, Pipfile.lock, poetry.lock
-│   ├── node.py               #   package.json, package-lock.json, yarn.lock, pnpm-lock.yaml
+│   ├── node.py               #   package.json, package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lock
 │   ├── java.py               #   pom.xml, build.gradle
 │   ├── go.py                 #   go.mod
 │   ├── ruby.py               #   Gemfile, Gemfile.lock

@@ -157,7 +157,7 @@ HELP_TEXT = textwrap.dedent("""\
     ─────────────────────────────────────────────────────────────────────────────
 
       Python     requirements.txt, pyproject.toml, Pipfile.lock, poetry.lock
-      Node.js    package.json, package-lock.json, yarn.lock, pnpm-lock.yaml
+      Node.js    package.json, package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lock
       Java       pom.xml, build.gradle, build.gradle.kts
       Go         go.mod
       Ruby       Gemfile, Gemfile.lock

@@ -1,10 +1,12 @@
 """Unit tests for dependency file parsers."""
 
+import json
+
 from repo_security_scanner.models import Ecosystem
 from repo_security_scanner.parsers.python import (
     RequirementsTxtParser, PyprojectTomlParser, PipfileLockParser, PoetryLockParser,
 )
-from repo_security_scanner.parsers.node import PackageJsonParser, PackageLockJsonParser, YarnLockParser, PnpmLockParser
+from repo_security_scanner.parsers.node import PackageJsonParser, PackageLockJsonParser, YarnLockParser, PnpmLockParser, BunLockParser
 from repo_security_scanner.parsers.java import PomXmlParser, BuildGradleParser
 from repo_security_scanner.parsers.go import GoModParser
 from repo_security_scanner.parsers.ruby import GemfileParser, GemfileLockParser
@@ -267,3 +269,40 @@ packages:
         names = {d.name for d in deps}
         assert "express" in names
         assert "@types/node" in names
+
+
+class TestBunLock:
+    def test_json_format(self):
+        content = json.dumps({
+            "lockfileVersion": 1,
+            "packages": {
+                "": ["root@0.0.0"],
+                "express": ["express@4.18.2"],
+                "@hono/node-server": ["@hono/node-server@1.8.0"],
+            }
+        })
+        deps = BunLockParser().parse(content, "bun.lock")
+        assert len(deps) == 2
+        names = {d.name for d in deps}
+        assert "express" in names
+        assert "@hono/node-server" in names
+        assert deps[0].ecosystem == Ecosystem.NPM
+
+    def test_scoped_packages(self):
+        content = json.dumps({
+            "packages": {
+                "": ["root@0.0.0"],
+                "@types/node": ["@types/node@20.10.0"],
+                "typescript": ["typescript@5.3.3"],
+            }
+        })
+        deps = BunLockParser().parse(content, "bun.lock")
+        assert len(deps) == 2
+        names = {d.name for d in deps}
+        assert "@types/node" in names
+        assert "typescript" in names
+
+    def test_empty_packages(self):
+        content = json.dumps({"packages": {}})
+        deps = BunLockParser().parse(content, "bun.lock")
+        assert len(deps) == 0
