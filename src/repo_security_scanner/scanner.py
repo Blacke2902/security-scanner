@@ -83,16 +83,23 @@ class SecurityScanner:
         return list(seen.values())
 
     def _query_vulns(self, deps: list[Dependency]) -> dict[str, list]:
-        """Query all vulnerability sources and merge results."""
+        """Query all vulnerability sources concurrently and merge results."""
+        import concurrent.futures
+
         merged: dict[str, list] = {}
-        seen_ids: dict[str, set] = {}  # dep_key -> set of vuln IDs
+        seen_ids: dict[str, set] = {}
 
-        for source in self.vuln_sources:
+        def _query_source(source):
             try:
-                results = source.query_batch(deps)
+                return source.query_batch(deps)
             except Exception:
-                continue
+                return {}
 
+        # Query all sources in parallel
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(self.vuln_sources)) as executor:
+            all_results = list(executor.map(_query_source, self.vuln_sources))
+
+        for results in all_results:
             for dep_key, vulns in results.items():
                 if dep_key not in merged:
                     merged[dep_key] = []

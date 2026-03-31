@@ -22,14 +22,18 @@ class HackerNewsDatabase(VulnDatabase):
         self.session = requests.Session()
 
     def query_batch(self, dependencies: list[Dependency]) -> dict[str, list[Vulnerability]]:
-        results: dict[str, list[Vulnerability]] = {}
-        searchable = [d for d in dependencies if should_search_web(d)]
+        import concurrent.futures
 
-        for dep in searchable:
-            vulns = self._search(dep)
-            if vulns:
-                results[dep.key] = vulns
-            time.sleep(0.2)
+        results: dict[str, list[Vulnerability]] = {}
+        searchable = [d for d in dependencies if should_search_web(d)][:30]  # Cap at 30
+
+        def _query_one(dep):
+            return dep.key, self._search(dep)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            for key, vulns in executor.map(lambda d: _query_one(d), searchable):
+                if vulns:
+                    results[key] = vulns
 
         return results
 

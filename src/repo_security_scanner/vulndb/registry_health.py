@@ -18,19 +18,21 @@ class RegistryHealthDatabase(VulnDatabase):
         self.session = requests.Session()
 
     def query_batch(self, dependencies: list[Dependency]) -> dict[str, list[Vulnerability]]:
+        import concurrent.futures
+
         results: dict[str, list[Vulnerability]] = {}
+        checkable = [d for d in dependencies if d.ecosystem in (Ecosystem.PYPI, Ecosystem.NPM)][:40]
 
-        for dep in dependencies:
+        def _check_one(dep):
             if dep.ecosystem == Ecosystem.PYPI:
-                vuln = self._check_pypi(dep)
-            elif dep.ecosystem == Ecosystem.NPM:
-                vuln = self._check_npm(dep)
+                return dep.key, self._check_pypi(dep)
             else:
-                continue
+                return dep.key, self._check_npm(dep)
 
-            if vuln:
-                results[dep.key] = [vuln]
-            time.sleep(0.1)  # Rate limiting
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            for key, vuln in executor.map(lambda d: _check_one(d), checkable):
+                if vuln:
+                    results[key] = [vuln]
 
         return results
 

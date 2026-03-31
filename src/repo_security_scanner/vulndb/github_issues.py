@@ -28,13 +28,13 @@ class GitHubIssuesDatabase(VulnDatabase):
 
     def query_batch(self, dependencies: list[Dependency]) -> dict[str, list[Vulnerability]]:
         results: dict[str, list[Vulnerability]] = {}
-        searchable = [d for d in dependencies if should_search_web(d)]
+        searchable = [d for d in dependencies if should_search_web(d)][:20]  # Cap at 20 (rate limit sensitive)
 
         for dep in searchable:
             vulns = self._search(dep)
             if vulns:
                 results[dep.key] = vulns
-            time.sleep(2)  # Respect rate limits
+            time.sleep(0.5)  # Reduced from 2s, rely on cache + cap
 
         return results
 
