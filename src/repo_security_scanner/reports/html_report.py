@@ -24,7 +24,7 @@ SOURCE_LABELS = {
 }
 
 
-def generate_html_report(report: ScanReport) -> str:
+def generate_html_report(report: ScanReport, llm_analysis: str = None) -> str:
     # Confirmed vulnerabilities
     vuln_rows = []
     for result in report.confirmed_results:
@@ -143,9 +143,20 @@ def generate_html_report(report: ScanReport) -> str:
     </tbody>
   </table>
   {signals_section}
+  {_build_llm_section(llm_analysis)}
 </div>
 </body>
 </html>"""
+
+
+def _build_llm_section(llm_analysis: str = None) -> str:
+    if not llm_analysis:
+        return ""
+    return f"""
+  <h2 style="margin-top:2rem;color:#2563eb;">AI Security Analysis</h2>
+  <div style="background:white;border:2px solid #2563eb;border-radius:8px;padding:1.5rem;margin-top:0.5rem;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+    <pre style="white-space:pre-wrap;font-family:inherit;margin:0;">{escape(llm_analysis)}</pre>
+  </div>"""
 
 
 def _signal_type(v) -> str:

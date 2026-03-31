@@ -6,7 +6,7 @@ from dataclasses import asdict
 from repo_security_scanner.models import ScanReport
 
 
-def generate_json_report(report: ScanReport) -> str:
+def generate_json_report(report: ScanReport, llm_analysis: str = None) -> str:
     data = {
         "summary": {
             "directory": report.directory,
@@ -21,6 +21,7 @@ def generate_json_report(report: ScanReport) -> str:
         "early_signal_count": report.early_signal_count,
         "results": [],
         "early_signals": [],
+        "llm_analysis": llm_analysis,
     }
 
     for result in report.confirmed_results:

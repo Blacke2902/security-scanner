@@ -38,6 +38,14 @@ SOURCE_LABELS = {
     "rss_bleepingcomputer": "Bleeping Computer",
     "rss_google_security": "Google Security Blog",
     "opencve": "OpenCVE",
+    "docker_eol": "Docker EOL",
+    "docker_unpinned": "Docker Unpinned",
+    "security_releases_nodejs": "Node.js Security",
+    "security_releases_cpython": "Python Security",
+    "security_releases_django": "Django Security",
+    "security_releases_rails": "Rails Security",
+    "security_releases_golang": "Go Security",
+    "security_releases_spring": "Spring Security",
 }
 
 HELP_TEXT = textwrap.dedent("""\
@@ -195,6 +203,10 @@ class CustomHelpFormatter(argparse.RawDescriptionHelpFormatter):
 
 
 def main():
+    # Handle schedule subcommand before argparse (backward compatible)
+    if len(sys.argv) > 1 and sys.argv[1] == "schedule":
+        return _handle_schedule(sys.argv[2:])
+
     parser = argparse.ArgumentParser(
         prog="repo-scan",
         description="Scan local repositories for dependency security vulnerabilities",
@@ -208,6 +220,8 @@ def main():
     parser.add_argument("--github-token", help=argparse.SUPPRESS)
     parser.add_argument("--skip-crossref", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--early-warning", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--llm", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--llm-provider", choices=["anthropic", "openai"], default="anthropic", help=argparse.SUPPRESS)
     parser.add_argument("--clear-cache", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--no-color", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("-h", "--help", action="store_true", help=argparse.SUPPRESS)
@@ -232,6 +246,14 @@ def main():
     vuln_sources = [OSVDatabase()]
     if not args.skip_crossref:
         vuln_sources.append(GitHubAdvisoryDatabase(token=args.github_token))
+
+    # Always-on sources: Docker image checks + official security release feeds
+    from repo_security_scanner.cache import FileCache
+    from repo_security_scanner.vulndb.docker_images import DockerImageDatabase
+    from repo_security_scanner.vulndb.security_releases import SecurityReleasesDatabase
+    _cache = FileCache()
+    vuln_sources.append(DockerImageDatabase(cache=_cache))
+    vuln_sources.append(SecurityReleasesDatabase(cache=_cache))
 
     # Early warning sources
     if args.early_warning:
@@ -268,18 +290,29 @@ def main():
             console.print(f"[red]Error:[/red] {e}")
             sys.exit(2)
 
+    # LLM analysis (optional)
+    llm_analysis = None
+    if args.llm:
+        from repo_security_scanner.llm import LLMAnalyzer
+        analyzer = LLMAnalyzer(provider=args.llm_provider)
+        if not analyzer.api_key:
+            console.print("[yellow]Warning:[/yellow] No API key found. Set ANTHROPIC_API_KEY or OPENAI_API_KEY env var.")
+        else:
+            with console.status("[bold blue]Generating AI security analysis...", spinner="dots"):
+                llm_analysis = analyzer.analyze(report)
+
     # Filter by minimum severity
     min_rank = SEVERITY_RANK.get(args.severity, 3)
 
     # Generate output
     if args.format == "json":
-        output = generate_json_report(report)
+        output = generate_json_report(report, llm_analysis=llm_analysis)
         if args.output:
             _write_file(args.output, output, console)
         else:
             console.print(output)
     elif args.format == "html":
-        output = generate_html_report(report)
+        output = generate_html_report(report, llm_analysis=llm_analysis)
         if args.output:
             _write_file(args.output, output, console)
             console.print(f"[green]HTML report written to {args.output}[/green]")
@@ -287,6 +320,11 @@ def main():
             console.print(output)
     else:
         _print_table_report(report, console, min_rank, args.early_warning)
+
+    # LLM analysis panel (table mode)
+    if llm_analysis and args.format == "table":
+        console.print()
+        console.print(Panel(llm_analysis, title="AI Security Analysis", border_style="bright_blue"))
 
     # Help hint after results
     _print_help_hint(console, args)
@@ -302,6 +340,8 @@ def _print_help_hint(console: Console, args):
     hints = []
     if not args.early_warning:
         hints.append("Tip: Use [bold]--early-warning[/bold] to detect threats before they hit CVE databases")
+    if not args.llm:
+        hints.append("Tip: Use [bold]--llm[/bold] for AI-powered security analysis and fix recommendations")
     if args.format == "table" and not args.output:
         hints.append("Tip: Use [bold]-f json -o report.json[/bold] or [bold]-f html -o report.html[/bold] to export reports")
     if not args.github_token and not os.environ.get("GITHUB_TOKEN"):
@@ -448,7 +488,75 @@ def _signal_type(v) -> str:
         return "NEWS"
     elif v.source == "cisa_kev":
         return "CISA KEV"
+    elif v.source == "docker_eol":
+        return "EOL IMAGE"
+    elif v.source == "docker_unpinned":
+        return "UNPINNED"
+    elif v.source.startswith("security_releases_"):
+        return "SEC RELEASE"
     return "SIGNAL"
+
+
+def _handle_schedule(args_list):
+    """Handle repo-scan schedule subcommands."""
+    from repo_security_scanner.scheduler import ScheduleManager, ScheduleDaemon
+
+    parser = argparse.ArgumentParser(prog="repo-scan schedule")
+    sub = parser.add_subparsers(dest="action")
+
+    add_p = sub.add_parser("add", help="Add a scheduled scan")
+    add_p.add_argument("path", help="Directory to scan")
+    add_p.add_argument("--cron", required=True, help='Cron expression (e.g. "0 8 * * *")')
+    add_p.add_argument("--name", required=True, help="Unique name for this schedule")
+
+    sub.add_parser("list", help="List all scheduled scans")
+
+    rm_p = sub.add_parser("remove", help="Remove a scheduled scan")
+    rm_p.add_argument("name", help="Schedule name to remove")
+
+    sub.add_parser("run", help="Start the scheduled scan daemon")
+
+    parsed = parser.parse_args(args_list)
+    console = Console()
+    manager = ScheduleManager()
+
+    if parsed.action == "add":
+        try:
+            manager.add(parsed.path, parsed.cron, parsed.name)
+            console.print(f"[green]Schedule '{parsed.name}' added.[/green]")
+            console.print(f"  Path: {parsed.path}")
+            console.print(f"  Cron: {parsed.cron}")
+            console.print(f"\nRun [bold]repo-scan schedule run[/bold] to start the daemon.")
+        except ValueError as e:
+            console.print(f"[red]Error:[/red] {e}")
+            sys.exit(2)
+    elif parsed.action == "list":
+        schedules = manager.list_schedules()
+        if not schedules:
+            console.print("[dim]No schedules configured. Use 'repo-scan schedule add' to create one.[/dim]")
+            return
+        table = Table(show_header=True, header_style="bold")
+        table.add_column("Name", style="bold cyan")
+        table.add_column("Path")
+        table.add_column("Cron")
+        table.add_column("Created")
+        for s in schedules:
+            table.add_row(s["name"], s["path"], s["cron"], s.get("created_at", ""))
+        console.print(table)
+    elif parsed.action == "remove":
+        if manager.remove(parsed.name):
+            console.print(f"[green]Schedule '{parsed.name}' removed.[/green]")
+        else:
+            console.print(f"[red]Schedule '{parsed.name}' not found.[/red]")
+            sys.exit(2)
+    elif parsed.action == "run":
+        console.print("[bold blue]Starting scheduled scan daemon...[/bold blue]")
+        console.print("[dim]Press Ctrl+C to stop.[/dim]")
+        daemon = ScheduleDaemon(manager)
+        daemon.run()
+        console.print("\n[dim]Daemon stopped.[/dim]")
+    else:
+        parser.print_help()
 
 
 def _write_file(path: str, content: str, console: Console):
